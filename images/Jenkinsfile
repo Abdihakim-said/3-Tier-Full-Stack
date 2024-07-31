@@ -1,0 +1,100 @@
+pipeline {
+    agent any
+
+    tools {
+        nodejs 'nodejs22'
+    }
+    environment {
+        SCANNER_HOME= tool 'sonar-scanner'
+        
+        IMAGE_TAG = "${BUILD_NUMBER}"
+    }
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Abdihakim-said/3-Tier-Full-Stack'
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh "npm install"
+            }
+        }
+        stage('Unit tests') {
+            steps {
+               sh "npm test"
+            }
+        }
+        stage('Trivy FS Scan') {
+            steps {
+               sh "trivy fs --format table -o fs-report.html ."
+            }
+        }
+        stage('SonarQube') {
+            steps {
+                withSonarQubeEnv('sonar') {
+               sh " $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectKey=Campground -Dsonar.projectName=Campground"
+            }
+          }
+        }
+        stage('Docker Build and Tag') {
+            steps {
+                script {
+               withDockerRegistry(credentialsId: 'docker-cred', toolname: 'docker') {
+                sh "docker build -t abdihakimdevops/camp:1 ."   
+               }
+            }
+        }
+    }
+        stage('Trivy Image Scan') {
+            steps {
+                sh "trivy image --format table -o fs-report.html abdihakimdevops/camp:1"
+            }
+        }
+        stage('Docker Push') {
+            steps {
+                script {
+               withDockerRegistry(credentialsId: 'docker-cred') {
+                sh "docker push abdihakimdevops/camp:latest"   
+               }
+            }
+        }
+    }
+       
+       stage('Checkout K8S manifest SCM'){
+            steps {
+                
+                 git branch: 'main', url: 'https://github.com/Abdihakim-said/3-Tier-Full-Stack'
+            }
+        }
+        
+            stage('Change Directory to manifests') {
+            steps {
+                dir('Manifests') {
+                    script {
+                        echo "Changed directory to manifests"
+                        // Add any additional commands to run in the manifests directory here
+                    }
+                }
+            }
+        }
+        
+        
+        stage('Update K8S manifest & push to Repo'){
+            steps {
+                
+                        sh '''
+                        
+                        cat dss.yml
+                        sed -i '' "s/32/${BUILD_NUMBER}/g" dss.yml
+                        cat dss.yml
+                    
+                        git add dss.yml
+                        git commit -m 'Updated the deploy yaml | Jenkins Pipeline'
+                        git remote -v
+                        git push https://github.com/Abdihakim-said/3-Tier-Full-Stack/tree/main/Manifests HEAD:main
+                        '''                        
+                    }
+                }
+            }
+        }
