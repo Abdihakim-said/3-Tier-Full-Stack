@@ -63,8 +63,7 @@ pipeline {
        
        stage('Checkout K8S manifest SCM'){
             steps {
-                
-                 git branch: 'main', url: 'https://github.com/Abdihakim-said/3-Tier-Full-Stack'
+                git branch: 'main', credentialsId: 'github', url: 'https://github.com/Abdihakim-said/3-Tier-Full-Stack'
             }
         }
         
@@ -85,7 +84,7 @@ pipeline {
                 
                         sh '''
                         
-                        cat dss.yml
+                        sh 'cat dss.yml'
                         sed -i '' "s/32/${BUILD_NUMBER}/g" dss.yml
                         cat dss.yml
                     
