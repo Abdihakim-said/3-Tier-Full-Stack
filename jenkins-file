@@ -92,7 +92,7 @@ pipeline {
                         git add dss.yml
                         git commit -m 'Updated the deploy yaml | Jenkins Pipeline'
                         git remote -v
-                        git push https://github.com/Abdihakim-said/3-Tier-Full-Stack/tree/main/Manifests HEAD:main
+                        git push https://github.com/Abdihakim-said/3-Tier-Full-Stack HEAD:main
                         '''                        
                     }
                 }
