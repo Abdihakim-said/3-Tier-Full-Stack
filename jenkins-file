@@ -79,21 +79,23 @@ pipeline {
         }
         
         
+         
         stage('Update K8S manifest & push to Repo'){
             steps {
-                
+                script{
+                    withCredentials([usernamePassword(credentialsId: 'github', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                         sh '''
-                        
-                        sh 'cat dss.yml'
+                        cat dss.yml
                         sed -i '' "s/32/${BUILD_NUMBER}/g" dss.yml
                         cat dss.yml
-                    
-                        git add dss.yml
+                        git add deploy.yaml
                         git commit -m 'Updated the deploy yaml | Jenkins Pipeline'
                         git remote -v
-                        git push https://github.com/Abdihakim-said/3-Tier-Full-Stack HEAD:main
+                        git push 'https://github.com/Abdihakim-said/3-Tier-Full-Stack' HEAD:main
                         '''                        
                     }
                 }
             }
         }
+    }
+}
